@@ -1,0 +1,26 @@
+{
+  "name": "bate-papo-uol-back-end",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuanMed/Bate-Papo-UOL-Back-end.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LuanMed/Bate-Papo-UOL-Back-end/issues"
+  },
+  "homepage": "https://github.com/LuanMed/Bate-Papo-UOL-Back-end#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "nodemon": "^2.0.20"
+  }
+}
