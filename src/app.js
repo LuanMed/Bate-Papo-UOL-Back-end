@@ -11,15 +11,15 @@ app.use(express.json());
 app.use(cors());
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
+let db;
 
 try {
     await mongoClient.connect();
+    db = mongoClient.db();
     console.log("MongoDB Connected!");
 } catch (err) {
     console.log(err.message);
 }
-
-const db = mongoClient.db();
 
 app.post('/participants', async (req, res) => {
     const { name } = req.body;
@@ -173,6 +173,6 @@ async function removeInactive (){
 
 setInterval(removeInactive, 15000);
 
-const PORT = process.env.PORT;
+const PORT = 5000;
 
 app.listen(PORT, () => console.log("Servidor rodou na porta: " + PORT));
