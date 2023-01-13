@@ -6,10 +6,6 @@ import dayjs from "dayjs";
 import { MongoClient } from "mongodb";
 dotenv.config();
 
-const app = express();
-app.use(express.json());
-app.use(cors());
-
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
 
@@ -20,6 +16,10 @@ try {
 } catch (err) {
     console.log(err.message);
 }
+
+const app = express();
+app.use(express.json());
+app.use(cors());
 
 app.post('/participants', async (req, res) => {
     const { name } = req.body;
