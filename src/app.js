@@ -173,6 +173,4 @@ async function removeInactive (){
 
 setInterval(removeInactive, 15000);
 
-const PORT = 5000;
-
-app.listen(PORT, () => console.log("Servidor rodou na porta: " + PORT));
+app.listen(5000, () => console.log("Servidor rodou"));
