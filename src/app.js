@@ -12,15 +12,21 @@ app.use(cors());
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
-
-try {
-    await mongoClient.connect();
+mongoClient.connect().then(() => {
     db = mongoClient.db();
-    app.listen(5000, () => console.log("Servidor rodou"));
-    console.log("MongoDB Connected!");
-} catch (err) {
-    console.log(err.message);
-}
+        console.log("MongoDB Connected!");
+})
+
+// const mongoClient = new MongoClient(process.env.DATABASE_URL);
+// let db;
+
+// try {
+//     await mongoClient.connect();
+//     db = mongoClient.db();
+//     console.log("MongoDB Connected!");
+// } catch (err) {
+//     console.log(err.message);
+// }
 
 app.post('/participants', async (req, res) => {
     const { name } = req.body;
@@ -168,3 +174,5 @@ async function removeInactive (){
 }
 
 setInterval(removeInactive, 15000);
+
+app.listen(5000, () => console.log("Servidor rodou"));
