@@ -6,20 +6,21 @@ import dayjs from "dayjs";
 import { MongoClient } from "mongodb";
 dotenv.config();
 
+const app = express();
+app.use(express.json());
+app.use(cors());
+
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
 
 try {
     await mongoClient.connect();
     db = mongoClient.db();
+    app.listen(5000, () => console.log("Servidor rodou"));
     console.log("MongoDB Connected!");
 } catch (err) {
     console.log(err.message);
 }
-
-const app = express();
-app.use(express.json());
-app.use(cors());
 
 app.post('/participants', async (req, res) => {
     const { name } = req.body;
@@ -167,5 +168,3 @@ async function removeInactive (){
 }
 
 setInterval(removeInactive, 15000);
-
-app.listen(5000, () => console.log("Servidor rodou"));
