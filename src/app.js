@@ -101,11 +101,6 @@ app.post('/messages', async (req, res) => {
     } catch (err) {
         return res.status(500).send(err.message);
     }
-
-    // if (!participants.find(item => item.name === from)) return res.status(422).send("Usuário não está logado!");
-    // console.log(participants)
-
-    // messages.push({ from, to, text, type, time: dayjs().format('HH:mm:ss') });
 })
 
 app.get('/messages', async (req, res) => {
