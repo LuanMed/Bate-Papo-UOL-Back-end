@@ -10,23 +10,23 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const mongoClient = new MongoClient(process.env.DATABASE_URL);
-let db;
-mongoClient.connect().then(() => {
-    db = mongoClient.db();
-        console.log("MongoDB Connected!");
-})
-
 // const mongoClient = new MongoClient(process.env.DATABASE_URL);
 // let db;
-
-// try {
-//     await mongoClient.connect();
+// mongoClient.connect().then(() => {
 //     db = mongoClient.db();
-//     console.log("MongoDB Connected!");
-// } catch (err) {
-//     console.log(err.message);
-// }
+//         console.log("MongoDB Connected!");
+// })
+
+const mongoClient = new MongoClient(process.env.DATABASE_URL);
+let db;
+
+try {
+    await mongoClient.connect();
+    db = mongoClient.db();
+    console.log("MongoDB Connected!");
+} catch (err) {
+    console.log(err.message);
+}
 
 app.post('/participants', async (req, res) => {
     const { name } = req.body;
@@ -62,7 +62,7 @@ app.post('/participants', async (req, res) => {
 
         res.sendStatus(201);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(422).send(err.message);
     }
     res.status(201);
 });
@@ -85,7 +85,7 @@ app.post('/messages', async (req, res) => {
     const schema = Joi.object({
         to: Joi.string().required(),
         text: Joi.string().required(),
-        type: Joi.any().valid('message', 'private_message')
+        type: Joi.any().valid('message', 'private_message').required()
     })
 
     if (schema.validate({ to: to, text: text, type: type }).error) {
@@ -114,8 +114,16 @@ app.get('/messages', async (req, res) => {
     const { limit } = req.query;
     const { user } = req.headers;
 
+    const schema = Joi.object({
+        limit: Joi.number().greater(0)
+    })
+
+    if (schema.validate({ limit: limit }).error) {
+        return res.sendStatus(422);
+    }
+
     try {
-        const messages = await db.collection("messages").find().toArray();
+        const messages = await db.collection("messages").find().toArray().reverse();
         //console.log(messages)
         const filterMessages = messages.filter(message =>
             message.type !== "private_message" ||
@@ -138,6 +146,10 @@ app.post('/status', async (req, res) => {
     const name = req.headers.user;
 
     try {
+        const isLogged = await db.collection("participants").findOne({ name });
+
+        if (!isLogged) return res.sendStatus(404);
+
         const user = await db.collection("participants").findOneAndUpdate(
             { name: name }, { $set: { lastStatus: Date.now() } }, { returnNewDocument: true }
         );
@@ -148,7 +160,6 @@ app.post('/status', async (req, res) => {
     } catch (err) {
         res.status(500).send(err.message);
     }
-
 });
 
 async function removeInactive (){    
@@ -175,4 +186,6 @@ async function removeInactive (){
 
 setInterval(removeInactive, 15000);
 
-app.listen(5000, () => console.log("Servidor rodou"));
+const PORT = 5000;
+
+app.listen(PORT, () => console.log(`Servidor rodou na porta: ${PORT}`));
