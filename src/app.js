@@ -4,18 +4,12 @@ import cors from "cors";
 import Joi from "joi";
 import dayjs from "dayjs";
 import { MongoClient } from "mongodb";
+import { stripHtml } from "string-strip-html";
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-
-// const mongoClient = new MongoClient(process.env.DATABASE_URL);
-// let db;
-// mongoClient.connect().then(() => {
-//     db = mongoClient.db();
-//         console.log("MongoDB Connected!");
-// })
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
@@ -29,14 +23,12 @@ try {
 }
 
 app.post('/participants', async (req, res) => {
-    const { name } = req.body;
+    const name = stripHtml(req.body.name.trim()).result;
     console.log(name);
 
     const schema = Joi.object({
         username: Joi.string().required()
     })
-
-    // console.log(schema.validate({ username: name }));
 
     if (schema.validate({ username: name }).error) {
         return res.status(422).send("Nome inválido!")
@@ -78,7 +70,8 @@ app.get('/participants', async (req, res) => {
 })
 
 app.post('/messages', async (req, res) => {
-    const { to, text, type } = req.body;
+    const { to, type } = req.body;
+    const text = stripHtml(req.body.text.trim()).result;
     const from = req.headers.user;
     console.log(from);
 
