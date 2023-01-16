@@ -52,7 +52,7 @@ app.post('/participants', async (req, res) => {
             text: 'entra na sala...',
             type: 'status',
             time: dayjs().format('HH:mm:ss')
-        }); 
+        });
 
         res.sendStatus(201);
     } catch (err) {
@@ -73,7 +73,7 @@ app.get('/participants', async (req, res) => {
 
 app.post('/messages', async (req, res) => {
     const { to, text, type } = req.body;
-    
+
     const from = req.headers.user;
     console.log(from);
 
@@ -139,19 +139,62 @@ app.get('/messages', async (req, res) => {
     }
 });
 
+app.put('/messages/:id', async (req, res) => {
+    const { to, text, type } = req.body;
+
+    const from = req.headers.user;
+    const { id } = req.params;
+
+    const schema = Joi.object({
+        to: Joi.string().required(),
+        text: Joi.string().required(),
+        type: Joi.any().valid('message', 'private_message').required()
+    })
+
+    if (schema.validate({ to: to, text: text, type: type }).error) {
+        return res.status(422).send("Preencha os campos corretamente!");
+    }
+
+    const treatedText = stripHtml(text.trim()).result;
+
+    try {
+        const isLogged = await db.collection("participants").findOne({ name: from });
+
+        if (!isLogged) return res.status(422).send("Usuário não está logado!");
+
+        const message = await db.collection("messages").findOne({ _id: ObjectId(id) });
+        if (!message) return res.sendStatus(404);
+
+        if (message.from !== from) return res.sendStatus(401);
+
+        await db.collection("messages").updateOne({ _id: ObjectId(id) }, {
+            $set: {
+                from,
+                to,
+                text: treatedText,
+                type,
+                time: dayjs().format('HH:mm:ss')
+            }
+        });
+        res.sendStatus(200)
+    } catch (err) {
+        res.sendStatus(500);
+    }
+})
+
 app.delete('/messages/:id', async (req, res) => {
     const { user } = req.headers;
     const { id } = req.params;
 
     try {
-        const message = await db.collection("messages").findOne({ _id: ObjectId(id)});
+        const message = await db.collection("messages").findOne({ _id: ObjectId(id) });
         console.log(message);
         if (!message) return res.sendStatus(404);
 
         if (message.from !== user) return res.sendStatus(401);
 
-        await db.collection("messages").deleteOne({_id: ObjectId(id)});
-        res.sendStatus(202)
+        await db.collection("messages").deleteOne({ _id: ObjectId(id) });
+        res.sendStatus(200)
     } catch (err) {
         res.sendStatus(500);
     }
@@ -170,20 +213,20 @@ app.post('/status', async (req, res) => {
         );
         //console.log(user);
         if (!user) return res.sendStatus(404);
-        
+
         res.sendStatus(200);
     } catch (err) {
         res.status(500).send(err.message);
     }
 });
 
-async function removeInactive (){    
-    
+async function removeInactive() {
+
     try {
         const users = await db.collection("participants").find().toArray();
         //console.log(users);
         const inactive = users.filter(user => Date.now() - Number(user.lastStatus) >= 10000);
-        inactive.map(async function(user) {
+        inactive.map(async function (user) {
             await db.collection("messages").insertOne({
                 from: user.name,
                 to: "Todos",
@@ -191,7 +234,7 @@ async function removeInactive (){
                 type: "status",
                 time: dayjs().format('HH:mm:ss')
             })
-            await db.collection("participants").deleteOne({ name: user.name})
+            await db.collection("participants").deleteOne({ name: user.name })
         })
 
     } catch (err) {
