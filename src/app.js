@@ -133,7 +133,7 @@ app.get('/messages', async (req, res) => {
 
         if (limit) {
             const lastMessages = filterMessages.slice(-limit);
-            return res.send(lastMessages);
+            return res.send(lastMessages.reverse());
         }
         res.send(filterMessages);
     } catch (err) {
