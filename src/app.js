@@ -23,8 +23,7 @@ try {
 }
 
 app.post('/participants', async (req, res) => {
-    const name = stripHtml(req.body.name.trim()).result;
-    console.log(name);
+    const { name } = req.body;
 
     const schema = Joi.object({
         username: Joi.string().required()
@@ -34,18 +33,21 @@ app.post('/participants', async (req, res) => {
         return res.status(422).send("Nome inválido!")
     }
 
+    const treatedName = stripHtml(name.trim()).result;
+    console.log(treatedName);
+
     try {
-        const userExist = await db.collection("participants").findOne({ name: name });
+        const userExist = await db.collection("participants").findOne({ name: treatedName });
 
         if (userExist) return res.status(409).send("Usuário já cadastrado!");
 
         await db.collection("participants").insertOne({
-            name: name,
+            name: treatedName,
             lastStatus: Date.now()
         });
 
         await db.collection("messages").insertOne({
-            from: name,
+            from: treatedName,
             to: "Todos",
             text: 'entra na sala...',
             type: 'status',
@@ -70,8 +72,8 @@ app.get('/participants', async (req, res) => {
 })
 
 app.post('/messages', async (req, res) => {
-    const { to, type } = req.body;
-    const text = stripHtml(req.body.text.trim()).result;
+    const { to, text, type } = req.body;
+    
     const from = req.headers.user;
     console.log(from);
 
@@ -85,6 +87,8 @@ app.post('/messages', async (req, res) => {
         return res.status(422).send("Preencha os campos corretamente!");
     }
 
+    const treatedText = stripHtml(text.trim()).result;
+
     try {
         const isLogged = await db.collection("participants").findOne({ name: from });
 
@@ -93,7 +97,7 @@ app.post('/messages', async (req, res) => {
         await db.collection("messages").insertOne({
             from,
             to,
-            text,
+            text: treatedText,
             type,
             time: dayjs().format('HH:mm:ss')
         })
