@@ -39,7 +39,7 @@ app.post('/participants', async (req, res) => {
     // console.log(schema.validate({ username: name }));
 
     if (schema.validate({ username: name }).error) {
-        return res.send("Nome inválido!")
+        return res.status(422).send("Nome inválido!")
     }
 
     try {
@@ -62,7 +62,7 @@ app.post('/participants', async (req, res) => {
 
         res.sendStatus(201);
     } catch (err) {
-        res.status(422).send(err.message);
+        res.status(500).send(err.message);
     }
     res.status(201);
 });
@@ -123,7 +123,7 @@ app.get('/messages', async (req, res) => {
     }
 
     try {
-        const messages = await db.collection("messages").find().toArray().reverse();
+        const messages = await db.collection("messages").find().toArray();
         //console.log(messages)
         const filterMessages = messages.filter(message =>
             message.type !== "private_message" ||
@@ -166,7 +166,7 @@ async function removeInactive (){
     
     try {
         const users = await db.collection("participants").find().toArray();
-        console.log(users);
+        //console.log(users);
         const inactive = users.filter(user => Date.now() - Number(user.lastStatus) >= 10000);
         inactive.map(async function(user) {
             await db.collection("messages").insertOne({
