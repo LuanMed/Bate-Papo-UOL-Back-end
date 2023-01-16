@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import Joi from "joi";
 import dayjs from "dayjs";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import { stripHtml } from "string-strip-html";
 dotenv.config();
 
@@ -52,7 +52,7 @@ app.post('/participants', async (req, res) => {
             text: 'entra na sala...',
             type: 'status',
             time: dayjs().format('HH:mm:ss')
-        });
+        }); 
 
         res.sendStatus(201);
     } catch (err) {
@@ -138,6 +138,24 @@ app.get('/messages', async (req, res) => {
         console.log("erro no get messages")
     }
 });
+
+app.delete('/messages/:id', async (req, res) => {
+    const { user } = req.headers;
+    const { id } = req.params;
+
+    try {
+        const message = await db.collection("messages").findOne({ _id: ObjectId(id)});
+        console.log(message);
+        if (!message) return res.sendStatus(404);
+
+        if (message.from !== user) return res.sendStatus(401);
+
+        await db.collection("messages").deleteOne({_id: ObjectId(id)});
+        res.sendStatus(202)
+    } catch (err) {
+        res.sendStatus(500);
+    }
+})
 
 app.post('/status', async (req, res) => {
     const name = req.headers.user;
